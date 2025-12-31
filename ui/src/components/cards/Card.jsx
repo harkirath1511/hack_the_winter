@@ -1,0 +1,133 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+// small helper to convert hex -> rgba string used for shadows/gradients
+function hexToRgba(hex, alpha = 1) {
+  const h = hex.replace("#", "");
+  const bigint = parseInt(h, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function Card({
+  id,
+  title,
+  description,
+  accentColor = "accent",
+  brdUrl,
+  strategyMarkdown,
+  landingPageCode,
+  contentData,
+  generatedAssets,
+}) {
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+  const colors = ["#f472b6", "#a855f7", "#ec4899", "#fb7185"];
+
+  const isReady = (() => {
+    if (id === 1) return Boolean(brdUrl) && Boolean(strategyMarkdown);
+    if (id === 2) return Boolean(landingPageCode);
+    if (id === 3) return Boolean(contentData) && Boolean(generatedAssets);
+    if (id === 4) return true;
+    return true;
+  })();
+
+  const handleClick = () => {
+    if (!isReady) return;
+    try {
+      if (id === 1) {
+        if (brdUrl || strategyMarkdown) {
+          localStorage.setItem(
+            "campaign_breakdown",
+            JSON.stringify({ brdUrl, strategyMarkdown })
+          );
+        }
+        window.open("/breakdown", "_blank");
+      } else if (id === 2) {
+        if (landingPageCode) {
+          localStorage.setItem("campaign_landingPageCode", landingPageCode);
+        }
+        window.open("/web-editor", "_blank");
+      } else if (id === 3) {
+        if (contentData || generatedAssets) {
+          localStorage.setItem(
+            "campaign_content",
+            JSON.stringify({ contentData, generatedAssets })
+          );
+        }
+        window.open("/postmaker", "_blank");
+      } else if (id === 4) {
+        window.open("/control", "_blank");
+      }
+    } catch (e) {
+      console.error("Failed opening new tab:", e);
+    }
+  };
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (isReady && (e.key === "Enter" || e.key === " ")) {
+          handleClick();
+        }
+      }}
+      role="button"
+      tabIndex={isReady ? 0 : -1}
+      className={`
+        relative rounded-lg p-8
+        border border-primary-200 dark:border-primary-800
+        transition-smooth
+        min-h-[240px]
+        flex flex-col justify-between
+        group
+        overflow-hidden
+        ${isReady ? "cursor-pointer" : "cursor-not-allowed opacity-60"}
+        ${isHovered && isReady ? "shadow-lg scale-105" : "shadow-md"}
+        bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20
+      `}
+    >
+      {isHovered && isReady && (
+        <div className="absolute inset-0 z-20 opacity-30 pointer-events-none">
+          <div
+            aria-hidden
+            className="w-full h-full rounded-lg"
+            style={{
+              background: `radial-gradient(420px 220px at 30% 50%, ${hexToRgba(
+                colors[0],
+                0.15
+              )}, transparent 30%), radial-gradient(420px 220px at 90% 80%, ${hexToRgba(
+                colors[1],
+                0.12
+              )}, transparent 25%)`,
+              filter: "blur(36px)",
+            }}
+          />
+        </div>
+      )}
+
+      <div className="relative z-10">
+        <div className="text-4xl font-bold mb-2 text-primary-700 dark:text-primary-300">
+          {String(id).padStart(2, "0")}
+        </div>
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3 leading-tight">
+          {title}
+        </h3>
+        <p className="text-neutral-700 dark:text-neutral-300 text-sm">
+          {description}
+        </p>
+        {!isReady && (
+          <p className="mt-3 text-xs font-semibold text-primary-600 dark:text-primary-400">
+            Waiting for backend...
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default Card;

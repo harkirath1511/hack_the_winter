@@ -1,0 +1,73 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Button from "./Button";
+
+function Navbar() {
+  const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navLinks = [
+    { name: "Features", href: "#features" },
+    { name: "How it works", href: "#workflow" },
+    { name: "Pricing", href: "#pricing" },
+  ];
+
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-smooth ${
+        isScrolled
+          ? "glass shadow-md border-b border-neutral-200 dark:border-neutral-800"
+          : "bg-white dark:bg-neutral-950"
+      }`}
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <a
+            href="/"
+            className="font-bold text-xl text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-smooth"
+          >
+            CampaignAI
+          </a>
+
+          {/* Navigation Links */}
+          <div className="hidden md:flex gap-8 items-center">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-smooth text-sm font-medium"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm">
+              Login
+            </Button>
+            <Button
+              onClick={() => navigate("/prompt")}
+              variant="primary"
+              size="sm"
+            >
+              Get Started
+            </Button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+export default Navbar;
